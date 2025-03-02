@@ -1,0 +1,150 @@
+units:
+  # Proxy Spacing Variables
+  kx: u
+  ky: u
+  # Padding Variables
+  px: kx + 2
+  py: ky + 2
+points:
+  zones:
+    matrix:
+      key:
+        padding: 1ky
+        spread: 1kx
+      anchor:
+        shift: [100, -100]
+      columns:
+        outer:
+          key.column_net: P2
+          key.mirror.column_net: P21
+        pinky:
+          key.column_net: P3
+          key.mirror.column_net: P20
+        ring:
+          key.origin: [-12, -19]
+          key.stagger: 16
+          key.column_net: P4
+          key.mirror.column_net: P19
+        middle:
+          key.stagger: 11
+          key.column_net: P5
+          key.mirror.column_net: P18
+        index:
+          key.stagger: -11
+          key.column_net: P6
+          key.mirror.column_net: P15
+        inner:
+          key.bind: [1, 30, 0, 0]
+          key.column_net: P7
+          key.mirror.column_net: P14
+      rows:
+        bottom:
+          row_net: P16
+        home:
+          row_net: P9
+        top:
+          row_net: P8
+    thumbfan:
+      anchor:
+        ref: matrix_inner_bottom
+        shift: [-5, -22]
+      columns:
+        near:
+          key.bind: [10, 0, 0, 0]
+          key.column_net: P6
+          key.mirror.column_net: P15
+        home:
+          key.spread: 20
+          key.splay: -15
+          key.origin: [-10.5, -10]
+          key.bind: [55, 0, 0, 20]
+          key.column_net: P7
+          key.mirror.column_net: P14
+      rows:
+        thumb:
+          row_net: P10
+  rotate: -12.5
+  mirror: &mirror
+    ref: matrix_inner_home
+    distance: 50
+outlines:
+  _raw:
+    - where: true
+      what: rectangle
+      size: [px, py]
+  _inner:
+    - what: rectangle
+      where:
+       - matrix_inner_top
+       - thumbfan_near_thumb
+       - thumbfan_home_thumb
+      size: [px, kx]
+      bound: true
+      asym: both
+    - what: polygon
+      points:
+        - ref: matrix_inner_top
+          shift: [0, 7.2]
+        - ref: mirror_matrix_inner_top
+          shift: [0, 7.2]
+        - ref: mirror_matrix_inner_home
+        - ref: matrix_inner_home
+  _combined:
+    - name: _raw
+    - name: _inner
+  base:
+    - name: _combined
+      fillet: 2
+  switchplate:
+    - name: base
+    - what: rectangle
+      where: true
+      asym: source
+      size: 14 # Plate cutouts are 14mm * 14mm for both MX and Choc
+      operation: subtract
+    - what: rectangle
+      where:
+        ref.aggregate.parts: [matrix_inner_top, mirror_matrix_inner_top]
+        shift: [0, 8]
+      size: [8.5, 11.5]
+      operation: subtract
+pcbs:
+  default:
+    outlines:
+      main:
+        outline: base
+    footprints:
+      mx_hotswap:
+        what: mx
+        where: true
+        params:
+          keycaps: true
+          reverse: false
+          hotswap: true
+          from: "{{column_net}}"
+          to: "{{colrow}}"
+      diode:
+        what: diode
+        where: true
+        params:
+          from: "{{colrow}}"
+          to: "{{row_net}}"
+        adjust:
+          shift: [4, -8]
+      promicro:
+        what: promicro
+        params:
+          orientation: "up"
+        where:
+          ref.aggregate.parts: [matrix_inner_top, mirror_matrix_inner_top]
+          shift: [0, -11.5]
+          rotate: -90
+  switchplate:
+    outlines:
+      main:
+        outline: switchplate
+cases:
+  switchplate:
+    - name: switchplate
+      extrude: 1.5
+      shift: [-218, 100, 0]
